@@ -4,15 +4,39 @@ import numpy as np  # just for proper typing
 
 
 def get_image(url: str) -> tuple[cv2.VideoCapture, tuple[bool, np.ndarray]]:
+    """Get a streamed image from a URL. WARNING! This will NOT work with video streams
+
+    Args:
+        url (str): image link to be processed
+
+    Returns:
+        tuple[cv2.VideoCapture, tuple[bool, np.ndarray]]: returns a VideoCapture object, check variable, and an image
+    """
     cap = cv2.VideoCapture(url)
     return cap, cap.read()
 
 
 def get_face_area(region: dict[str, int]) -> int:
+    """claculate face area give its x,y,h,w region from DeepFace
+
+    Args:
+        region (dict[str, int]): a dictionary with x,y,w,h as keys
+
+    Returns:
+        int: returns face area
+    """
     return region["w"] * region["h"]
 
 
 def emotion_model(img: np.ndarray) -> tuple[bool, str]:
+    """analyze facial emotions with DeepFace for all faces in the image, only biggest face area is considered.
+
+    Args:
+        img (np.ndarray): input image
+
+    Returns:
+        tuple[bool, str]: emotion of the biggest face in the picture
+    """
     try:
         objs = DeepFace.analyze(
             img_path=img, actions=["age", "gender", "race", "emotion"]
@@ -29,6 +53,17 @@ def emotion_model(img: np.ndarray) -> tuple[bool, str]:
 
 
 def get_emotion(url: str) -> str:
+    """Analyze facial emotions with DeepFace for all faces in an image from a URL, only biggest face area is considered and returns its emotion.
+
+    Args:
+        url (str): Image URL to be processed.
+
+    Raises:
+        IOError: In case URL is not valid or doesn't contain an image
+
+    Returns:
+        str: Detected emotion of the biggest face in the image
+    """
     cap, (success, img) = get_image(url)
     cap.release()
     if success:
