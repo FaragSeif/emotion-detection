@@ -44,14 +44,14 @@ def get_emotion(url: str) -> str:
         raise IOError("URL not valid or not an image", "URL is: {url}")
 
 
-def run_mesh_detection_model(img: np.ndarray):  # ADD: return type hint
+def run_mesh_detection_model(img: np.ndarray) -> np.ndarray:  # ADD: return type hint
     """Run the face mesh detection model that uses MediaPipe as a backend for one face in the image. If multiple faces are present in the image, the one with highest confidence is considered.
 
     Args:
         img (np.ndarray): Input image
 
     Returns:
-        : Face mesh of the highest confedince face in the given image
+        np.ndarray: Normalized list or facemesh points of the highest confedince face in the given image
     """
     with mp_face_mesh.FaceMesh(
         max_num_faces=1,
@@ -76,9 +76,8 @@ def run_mesh_detection_model(img: np.ndarray):  # ADD: return type hint
             )
 
 
-def get_face_mesh(url: str) -> str:
-    """Analyze facial emotions with DeepFace for all faces in an image from a URL, only biggest face area is considered and returns its emotion.
-
+def get_face_mesh(url: str) -> np.ndarray:
+    """Run facemesh detection on a face image from a URL, return normalized facemesh point list
     Args:
         url (str): Image URL to be processed.
 
@@ -86,7 +85,7 @@ def get_face_mesh(url: str) -> str:
         IOError: In case URL is not valid or doesn't contain an image
 
     Returns:
-        str: Detected emotion of the biggest face in the image
+        np.ndarray: Normalized list or facemesh points of the highest confedince face in the given image
     """
     success, img = get_image(url)
     if success:
@@ -96,7 +95,20 @@ def get_face_mesh(url: str) -> str:
         raise IOError("URL not valid or not an image", "URL is: {url}")
 
 
-def get_skin_hue(url, point_num):
+def get_skin_hue(url: str, point_num: int) -> np.uint8:
+    """Gets skin hue from a face image given a URL and the desired facemesh point to investigate.
+
+    Args:
+        url (str): Image URL to be processed
+        point_num (int): Facemesh point to get its skin hue
+
+    Raises:
+        ValueError: In case a wrong facemesh point number was given
+        IOError: If give URL is not a valid URL or is not an image URL.
+
+    Returns:
+        np.uint8: Skin hue value of the desired facemesh point
+    """
     if not (point_num >= 0 and point_num <= 477):
         raise ValueError(
             "Wrong facemesh point, facemesh points are integers between 0 and 477."
@@ -110,11 +122,27 @@ def get_skin_hue(url, point_num):
         raise IOError("URL not valid or not an image", "URL is: {url}")
 
 
-def get_eyelid_distance(url):
+def get_eyelid_distance(url: str) -> list:
+    """Given a URL of a face image, return the vertical and horizontal distance of the eyelids of each eye.
+
+    Args:
+        url (str): Input image URL.
+
+    Returns:
+        list: A list containing tuples for Left eye vertical, Left eye horizontal, Right eye vertical, and Right eye horizontal distances.
+    """
     normalized_mesh_point_list = get_face_mesh(url)
     return calculate_distance(normalized_mesh_point_list)
 
 
-def get_iris_radius(url):
+def get_iris_radius(url: str) -> list:
+    """Given a URL of a face image, return the center and radius of the left and right iris.
+
+    Args:
+        url (str): Input Image URL.
+
+    Returns:
+        list: A list containing tuples for Left eye center, Left eye radius, Right eye center, and Right eye radius.
+    """
     normalized_mesh_point_list = get_face_mesh(url)
     return calculate_iris_radius(normalized_mesh_point_list)

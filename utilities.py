@@ -10,13 +10,13 @@ LEFT_EYE = list(mp_face_mesh.FACEMESH_LEFT_EYE)
 RIGHT_EYE = list(mp_face_mesh.FACEMESH_RIGHT_EYE)
 LEFT_IRIS = [474, 475, 476, 477]
 RIGHT_IRIS = [469, 470, 471, 472]
-left_eyelids = [
+LEFT_EYELIDS = [
     LEFT_EYE[0][0],
     LEFT_EYE[5][0],
     LEFT_EYE[10][0],
     LEFT_EYE[-1][1],
 ]
-right_eyelids = [
+RIGHT_EYELIDS = [
     RIGHT_EYE[14][0],
     RIGHT_EYE[12][0],
     RIGHT_EYE[3][0],
@@ -51,29 +51,46 @@ def get_face_area(region: dict[str, int]) -> int:
     return region["w"] * region["h"]
 
 
-def get_hue(img, coordinates):
+def get_hue(img: np.ndarray, coordinates: np.ndarray) -> np.uint8:
+    """Given x,y coordinates of a facemesh point, return its Hue value.
+
+    Args:
+        img (np.ndarray): input image
+        coordinates (np.ndarray): x,y coordinates of the desired facemesh points
+
+    Returns:
+        np.uint8: hue value of the facemesh point
+    """
     x, y = coordinates
     hsv_img = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
     return hsv_img[x, y, 0]
 
 
-def calculate_distance(normalized_point_list):
+def calculate_distance(normalized_point_list: np.ndarray) -> list:
+    """Calculate vertical and horizontal eyelids distance.
+
+    Args:
+        normalized_point_list (np.ndarray): Normalized facemesh points
+
+    Returns:
+        list: List containing vertical and horizontal distances of each eye
+    """
     left_v_dist = (
-        normalized_point_list[left_eyelids[0]][1]
-        - normalized_point_list[left_eyelids[2]][1]
+        normalized_point_list[LEFT_EYELIDS[0]][1]
+        - normalized_point_list[LEFT_EYELIDS[2]][1]
     )
     left_h_dist = (
-        normalized_point_list[left_eyelids[1]][0]
-        - normalized_point_list[left_eyelids[3]][0]
+        normalized_point_list[LEFT_EYELIDS[1]][0]
+        - normalized_point_list[LEFT_EYELIDS[3]][0]
     )
 
     right_v_dist = (
-        normalized_point_list[right_eyelids[0]][1]
-        - normalized_point_list[right_eyelids[2]][1]
+        normalized_point_list[RIGHT_EYELIDS[0]][1]
+        - normalized_point_list[RIGHT_EYELIDS[2]][1]
     )
     right_h_dist = (
-        normalized_point_list[right_eyelids[3]][0]
-        - normalized_point_list[right_eyelids[1]][0]
+        normalized_point_list[RIGHT_EYELIDS[3]][0]
+        - normalized_point_list[RIGHT_EYELIDS[1]][0]
     )
 
     left_distance = (left_v_dist, left_h_dist)
@@ -82,7 +99,15 @@ def calculate_distance(normalized_point_list):
     return [left_distance, right_distance]
 
 
-def calculate_iris_radius(normalized_point_list):
+def calculate_iris_radius(normalized_point_list: np.ndarray) -> list:
+    """Calculate the center and radius of each iris
+
+    Args:
+        normalized_point_list (np.ndarray): Normalized facemesh points
+
+    Returns:
+        list: Center and radius of each iris
+    """
     (left_iris_cx, left_iris_cy), left_iris_r = cv2.minEnclosingCircle(
         normalized_point_list[LEFT_IRIS]
     )
